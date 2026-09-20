@@ -1,0 +1,12 @@
+{
+  "guid": "a7c3e9d1-4b2f-4e8a-9c1d-6f5a2b8e3d70",
+  "name": "OSD Display Mode",
+  "description": "Adds a player-settings switch for OSD display mode (hover / click) without breaking the Jellyfin 12 back button.",
+  "overview": "Player OSD display mode switch (hover / click).",
+  "owner": "Yami",
+  "category": "General",
+  "version": "1.0.7.0",
+  "targetAbi": "12.1.0.0",
+  "changelog": "Block Jellyfin's pointerdown click-to-pause while the OSD is open in click mode.",
+  "imageUrl": ""
+}

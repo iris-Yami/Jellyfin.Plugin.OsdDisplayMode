@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>菜单显示方式</title>
+</head>
+<body>
+    <div id="OsdDisplayModeConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="OsdDisplayModeConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">菜单显示方式</h2>
+                    </div>
+                    <p class="fieldDescription">
+                        在播放页设置菜单中增加「菜单显示」开关：移入沿用 Jellyfin 原有悬停隐藏；单击改为点画面切换顶栏和控制条。不会再把 <code>#reactRoot</code> 整页卸掉，因此 Jellyfin 12 的返回按钮仍然可用。
+                    </p>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="Enabled" />
+                            <span>启用插件</span>
+                        </label>
+                        <div class="fieldDescription">关闭后不再注入脚本，播放器恢复默认行为。保存后请刷新网页。</div>
+                    </div>
+
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="DefaultMode">默认显示方式</label>
+                        <select is="emby-select" id="DefaultMode" class="emby-select-withcolor emby-select">
+                            <option value="hover">移入（Jellyfin 默认）</option>
+                            <option value="click">单击切换</option>
+                        </select>
+                        <div class="fieldDescription">仅在该浏览器还没有保存过偏好时生效。用户在播放设置里切换后会写到本地存储。</div>
+                    </div>
+
+                    <button is="emby-button" type="submit" class="raised button-submit block">
+                        <span>保存</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        var OsdDisplayModeConfig = {
+            pluginUniqueId: 'a7c3e9d1-4b2f-4e8a-9c1d-6f5a2b8e3d70'
+        };
+
+        document.querySelector('#OsdDisplayModeConfigPage')
+            .addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(OsdDisplayModeConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#Enabled').checked = config.Enabled !== false;
+                    document.querySelector('#DefaultMode').value = config.DefaultMode === 'click' ? 'click' : 'hover';
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+        document.querySelector('#OsdDisplayModeConfigForm')
+            .addEventListener('submit', function (e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(OsdDisplayModeConfig.pluginUniqueId).then(function (config) {
+                    config.Enabled = document.querySelector('#Enabled').checked;
+                    config.DefaultMode = document.querySelector('#DefaultMode').value;
+                    ApiClient.updatePluginConfiguration(OsdDisplayModeConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+                e.preventDefault();
+                return false;
+            });
+    </script>
+</body>
+</html>
