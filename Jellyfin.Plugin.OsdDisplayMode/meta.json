@@ -5,8 +5,8 @@
   "overview": "Player OSD display mode switch (hover / click).",
   "owner": "Yami",
   "category": "General",
-  "version": "1.0.7.0",
+  "version": "1.0.8.0",
   "targetAbi": "12.1.0.0",
-  "changelog": "Block Jellyfin's pointerdown click-to-pause while the OSD is open in click mode.",
+  "changelog": "In click mode, double-click the video area to pause or play.",
   "imageUrl": ""
 }

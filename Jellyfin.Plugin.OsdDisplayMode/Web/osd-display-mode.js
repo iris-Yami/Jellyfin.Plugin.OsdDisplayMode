@@ -74,7 +74,10 @@ html.yami-osd-click.yami-osd-on #videoOsdPage {
     let lastHash = '';
     let observeTimer = 0;
     let injectTries = 0;
-    let gestureHandled = false;
+    let osdClickTimer = 0;
+    let lastSurfacePointerDown = 0;
+    let doubleClickHandled = false;
+    const DOUBLE_CLICK_MS = 300;
 
     function pluginDefaultMode() {
         const def = window.__OSD_DISPLAY_MODE__ && window.__OSD_DISPLAY_MODE__.defaultMode;
@@ -170,28 +173,72 @@ html.yami-osd-click.yami-osd-on #videoOsdPage {
         return true;
     }
 
+    function cancelOsdClickTimer() {
+        if (!osdClickTimer) return;
+        window.clearTimeout(osdClickTimer);
+        osdClickTimer = 0;
+    }
+
+    function togglePlayback() {
+        const pauseButton = qs('.btnPause');
+        if (pauseButton) {
+            pauseButton.click();
+            setOsdVisible(true);
+            return;
+        }
+
+        const video = qs('.videoPlayerContainer video') || qs('video');
+        if (!video) return;
+        if (video.paused) {
+            const pending = video.play();
+            if (pending && typeof pending.catch === 'function') {
+                pending.catch(function () {});
+            }
+        } else {
+            video.pause();
+        }
+        setOsdVisible(true);
+    }
+
     function onSurfacePointerDown(event) {
         if (!shouldHandleSurface(event)) return;
         if (event.type === 'mousedown' && window.PointerEvent) return;
-        gestureHandled = true;
         stopEvent(event);
-        setOsdVisible(!isOsdVisible());
+
+        const now = Date.now();
+        if (lastSurfacePointerDown && now - lastSurfacePointerDown < DOUBLE_CLICK_MS) {
+            lastSurfacePointerDown = 0;
+            cancelOsdClickTimer();
+            doubleClickHandled = true;
+            togglePlayback();
+            return;
+        }
+
+        lastSurfacePointerDown = now;
+        doubleClickHandled = false;
+        cancelOsdClickTimer();
+        osdClickTimer = window.setTimeout(function () {
+            osdClickTimer = 0;
+            lastSurfacePointerDown = 0;
+            setOsdVisible(!isOsdVisible());
+        }, DOUBLE_CLICK_MS);
     }
 
     function onSurfaceClick(event) {
         if (!shouldHandleSurface(event)) return;
         stopEvent(event);
-        if (gestureHandled) {
-            gestureHandled = false;
-            return;
-        }
-        setOsdVisible(!isOsdVisible());
     }
 
     function onSurfaceDblClick(event) {
         if (!shouldHandleSurface(event)) return;
-        gestureHandled = false;
         stopEvent(event);
+        cancelOsdClickTimer();
+        lastSurfacePointerDown = 0;
+        if (doubleClickHandled) {
+            doubleClickHandled = false;
+            return;
+        }
+        togglePlayback();
     }
 
     function bindSurface() {
@@ -210,7 +257,9 @@ html.yami-osd-click.yami-osd-on #videoOsdPage {
         window.removeEventListener('mousedown', onSurfacePointerDown, true);
         window.removeEventListener('click', onSurfaceClick, true);
         window.removeEventListener('dblclick', onSurfaceDblClick, true);
-        gestureHandled = false;
+        cancelOsdClickTimer();
+        lastSurfacePointerDown = 0;
+        doubleClickHandled = false;
     }
 
     function modeLabel(mode) {
